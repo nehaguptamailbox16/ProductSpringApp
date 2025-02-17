@@ -37,14 +37,40 @@ public class ProductController {
     }
 
     @GetMapping("/products/{id}")
-    public ProductDto getProductById(@PathVariable("id") Long productId) {
+    public ResponseEntity<ProductDto> getProductById(@PathVariable("id") Long productId) {
 //        ProductDto productDto = new ProductDto();
 //       productDto.setId(productId);
 //        productDto.setName("Iphone");
 //        return productDto;
 
-      Product product =   productService.getProductById(productId);
-      return from(product);
+//      Product product =   productService.getProductById(productId);
+//        ProductDto productDto = from(product);
+//
+//        return new ResponseEntity<>(productDto, HttpStatus.OK);
+
+        try {
+            if(productId < 0) {
+                throw new IllegalArgumentException("productId is invalid");
+            }
+            else if(productId == 0) {
+                throw new IllegalArgumentException("product with id 0 not accessible");
+            }
+
+            Product product = productService.getProductById(productId);
+            MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
+
+            if (product == null) {
+                headers.add("message", "product not exist");
+                return new ResponseEntity<>(null, headers, HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
+            ProductDto productDto = from(product);
+
+            return new ResponseEntity<>(productDto, HttpStatus.OK);
+        }catch (IllegalArgumentException exception) {
+            throw exception;
+            // return new ResponseEntity<>(null,HttpStatus.BAD_REQUEST);
+        }
     }
 
     @PutMapping("/products/{id}")
